@@ -46,22 +46,22 @@ const startUp = () => {
     });
 };
 
-const viewDepts = async () => {
+const viewDepts = async (res) => {
     dataBase.query(
         `SELECT * FROM departments;`)         
-            consoleTable(results);
+            consoleTable(res);
             startUp();
         
 };
 
-const viewRoles = async () => {
+const viewRoles = async (res) => {
     dataBase.query(
         `SELECT * FROM roles;`)
-        consoleTable(results);
+        consoleTable(res);
         startUp();
 };
 
-const viewEmployees = async () => {
+const viewEmployees = async (res) => {
     dataBase.query(
         ` SELECT employees.id, CONCAT(employees.first_name, " ", employees.last_name) AS employees, roles.title AS roles, roles.salary AS salary, departments.name AS departments, CONCAT(managers.first_name, " ", managers.last_name) AS manager
         FROM employees
@@ -69,7 +69,7 @@ const viewEmployees = async () => {
         JOIN departments ON roles.department_id = departments.id
         JOIN employees manager ON manager.id = employees.manager_id;`)
         
-        consoleTable(results);
+        consoleTable(res);
         startUp();
 };
 
