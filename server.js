@@ -1,5 +1,5 @@
 const inquirer = require('inquirer');
-const dataBase = require('./config/connection');
+const dataBase = require('./config/dbConnection');
 const consoleTable = require('console.table');
 const questions = require('./lib/questions');
 
