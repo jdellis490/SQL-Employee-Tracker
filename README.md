@@ -11,3 +11,7 @@ To use, the User must run `npm start` command in the terminal and the prompts sh
 ## Usage
 
 I have included a video demo of the project below to show some of the basic funcionality:
+
+
+https://user-images.githubusercontent.com/81279037/173971593-737ff75f-5768-40c3-b680-1e296f7303a7.mp4
+
