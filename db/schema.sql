@@ -13,13 +13,24 @@ CREATE TABLE departments (
 
 DROP TABLE IF EXISTS roles;
 CREATE TABLE roles (
-    id INT NOT NULL AUT0_INCREMENT,
+    id INT NOT NULL AUTO_INCREMENT,
     title VARCHAR(50) NOT NULL,
     salary DECIMAL(8,2) NOT NULL,
-    department_id INT,
+    departments_id INT,
     PRIMARY KEY (id),
-    FOREIGN KEY (department_id)
-    REFERENCES department(id) ON DELETE SET NULL
+    FOREIGN KEY (departments_id)
+    REFERENCES departments(id) ON DELETE SET NULL
+);
+
+DROP TABLE IF EXISTS managers;
+CREATE TABLE managers (
+    id INT NOT NULL AUTO_INCREMENT,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    departments_id INT,
+    PRIMARY KEY (id),
+    FOREIGN KEY (departments_id)
+    REFERENCES departments(id) ON DELETE SET NULL
 );
 
 DROP TABLE IF EXISTS employees;
@@ -33,5 +44,5 @@ CREATE TABLE employees (
     FOREIGN KEY (role_id)
     REFERENCES roles(id) ON DELETE SET NULL,
     FOREIGN KEY (manager_id)
-    REFERENCES employee(id) ON DELETE SET NULL
+    REFERENCES manager(id) ON DELETE SET NULL
 );

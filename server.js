@@ -1,8 +1,11 @@
+// Imported files
 const inquirer = require('inquirer');
 const dataBase = require('./config/dbConnection');
-const consoleTable = require('console.table');
 const questions = require('./lib/questions');
+const util = require('util');
+const query = util.promisify(dataBase.query).bind(dataBase);
 
+//Starts questions for beggin of app
 const startUp = () => {
     inquirer.prompt(questions.beginQuestion)
     .then((answers) => {
@@ -46,98 +49,105 @@ const startUp = () => {
     });
 };
 
-const viewDepts = async (res) => {
-    dataBase.query(
-        `SELECT * FROM departments;`)         
-            consoleTable(res);
-            startUp();
-        
-};
-
-const viewRoles = async (res) => {
-    dataBase.query(
-        `SELECT * FROM roles;`)
-        consoleTable(res);
+//Function to view Departments
+const viewDepts = async () => {
+    const data = await query(
+        `SELECT * FROM departments;`)
+        consoleTable(data);
         startUp();
 };
 
-const viewEmployees = async (res) => {
-    dataBase.query(
+
+//Function to view Employee Roles
+const viewRoles = async () => {
+    const data = await query(
+        `SELECT * FROM roles;`)
+        consoleTable(data);
+        startUp();
+};
+
+//Function to view Employees
+const viewEmployees = async () => {
+    const data = await query(
         ` SELECT employees.id, CONCAT(employees.first_name, " ", employees.last_name) AS employees, roles.title AS roles, roles.salary AS salary, departments.name AS departments, CONCAT(managers.first_name, " ", managers.last_name) AS manager
         FROM employees
         JOIN roles on employees.role_id = roles.id
-        JOIN departments ON roles.department_id = departments.id
-        JOIN employees manager ON manager.id = employees.manager_id;`)
+        JOIN departments ON roles.departments_id = departments.id
+        JOIN employees manager ON managers.id = employees.manager_id;`)
         
-        consoleTable(res);
+        consoleTable(data);
         startUp();
 };
 
+//Function to add Departments
 const addDepts = async () => {
     const newDept = await inquirer.prompt(questions.deptQuestions);
-     await dataBase.query(`
+     await query(`
      INSERT INTO departments (name)
      VALUES (?)`, newDept.deptNames.trim());
 
      await viewDepts();
 };
 
+//Function to add roles to Employees
 const addRoles = async () => {
     await getDepts();
 
     const roleAddition = await inquirer.prompt(questions.roleQuestions)
-    const deptQuery = await dataBase.query(`
+    const deptQuery = await query(`
         SELECT id from departments
         WHERE name = (?)`, roleAddition.roleDept);
         const deptID = deptQuery[0].id;
-        await dataBase.query(`
-        INSERT INTO roles (title, salary, department_id)
+        await query(`
+        INSERT INTO roles (title, salary, departments_id)
         VALUES (?, ?, ?)`, [roleAddition.roleTitle, parseInt(roleAddition.newSalary), deptID]);
         
         viewRoles();
 };
 
+//Adds new Employees
 const addEmployees = async () => {
     await selectRoles();
     await selectEmployees();
 
     const newEmpAdd = await inquirer.prompt(questions.empQuestions);
-    const roleSearch = await dataBase.query(`
+    const roleSearch = await query(`
     SELECT id from roles
     WHERE title = (?)`, newEmpAdd.newRole);
     
     const roleIDs = roleSearch[0].id;
     const managerName = newEmpAdd.deptManager.split(' ');
-    const managerSelect = await dataBase.query(`
+    const managerSelect = await query(`
     SELECT id from employees
     WHERE first_name = (?) AND last_name = (?);`, [managerName[0], managerName[1]]);
     const managersID = managerSelect[0].id;
     
-    await dataBase.query(`
+    await query(`
     INSERT INTO employees (first_name, last_name, role_id, manager_id)
     VALUES (?, ?, ?, ?)`, [newEmpAdd.firstName, newEmpAdd.lastName, roleIDs, managersID]);
 
     viewEmployees();
 };
 
+//Updates roles of current Employees
 const updateCurrentRoles = async () => {
     await selectRoles();
     await selectEmployees();
 
     const updateEmpRoles = await inquirer.prompt(questions.updateRole);
-    const roleSearch = await dataBase.query(`
+    const roleSearch = await query(`
     SELECT id from roles
     WHERE title = (?);`, updateEmpRoles.roleUpdate);
     
     const roleIDs = roleSearch[0].id;
     const employeeName = updateEmpRoles.currentUpdateEmp.split(' ');
     
-    const searchEmployee = await dataBase.query(`
+    const searchEmployee = await query(`
     SELECT id from employees
     WHERE first_name = (?) AND last_name = (?);` [employeeName[0], employeeName[1]]);
     const empID = searchEmployee[0].id;
     
-    await dataBase.query(`
+    await query(`
     UPDATE employees
     SET role_id = (?)
     WHERE id = (?)`, [roleIDs, empID]);
@@ -145,12 +155,19 @@ const updateCurrentRoles = async () => {
     await viewEmployees();
 };
 
+//Formats User input data into table format in the console log
+const consoleTable = (data) => {
+    console.table(data);
+};
+
+//Quits application
 const exitSystem = () => {
     process.exit();
 }
 
+//Renders all departments
 const getDepts = async () => {
-    const listDepts = await dataBase.query(`SELECT id, name FROM departments;`);
+    const listDepts = await query(`SELECT id, name FROM departments;`);
     
     for (const coreDepts of listDepts){
         const departments = {};
@@ -160,8 +177,9 @@ const getDepts = async () => {
     };
 };
 
+//Renders all roles of Employees
 const selectRoles = async () => {
-    const listRoles = await dataBase.query(`SELECT id, name FROM roles;`);
+    const listRoles = await query(`SELECT id, name FROM roles;`);
     
     for (const coreRoles of listRoles) {
         const roles = {};
@@ -171,8 +189,9 @@ const selectRoles = async () => {
     };
 };
 
+//Renders all Employees of company
 const selectEmployees = async () => {
-    const listEmps = await dataBase.query(`SELECT id, first_name, last_name FROM employees;`);
+    const listEmps = await query(`SELECT id, first_name, last_name FROM employees;`);
     
     for (const coreEmps of listEmps){
         const employees ={};
@@ -182,4 +201,6 @@ const selectEmployees = async () => {
     };
 };
 
+
+//Calling function to prompt user with questions
 startUp();
